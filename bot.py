@@ -75,7 +75,7 @@ class NameRateBot(praw.Reddit):
                 comments_processed = 0
                 for comment in sub.stream.comments():
                     comments_processed += 1
-                    if comments_processed % 150 == 0:
+                    if comments_processed % 500 == 0:
                         print self._generate_log_string('INFO', '{0} comments processed.'.format(comments_processed))
                     comment_as_string = re.sub(r'[^\w\s]+', '', comment.body)
                     for qualifier in self.qualifiers:
@@ -88,18 +88,25 @@ class NameRateBot(praw.Reddit):
                             print self._generate_log_string('INFO', '{0}'.format(comment.body))
                             comment.reply("""You have rated u/{0}'s name! They currently have a score of {1:.2f} out of 100.
                             (This bot is only testing names within the scope of r/{2}) 
-                            ^^^bleep ^^^bloop ^^^im ^^^a ^^^bot. ^^^by ^^^u/TheMetaphorer """.format(
+                            ^^^bleep ^^^bloop ^^^im ^^^a ^^^bot.""".format(
                                 comment.parent().author.name, self.stats_dictionary[comment.parent().author.name],
                                 sub))
                             print self._generate_log_string('INFO', 'Reply to u/{0} generated.'.format(comment.author.name))
                             break
 
         except KeyboardInterrupt:
-            print self._generate_log_string('INFO', 'Ctrl-C caught. Exiting program with 0 status.')
-            f=open(json_file, 'w+')
-            f.write(json.dumps(self.stats_dictionary))
-            f.close()
-            sys.exit(0)
+            print self._generate_log_string('INFO', 'Ctrl-C caught. Program suspended.')
+            print self._generate_log_string('INFO', '{0} comments processed.'.format(comments_processed))
+            try:
+                print self._generate_log_string('INFO', 'Sleeping for 10 seconds. Ctrl-C again to continue, press nothing to terminate.')
+                time.sleep(10)
+                print self._generate_log_string('INFO', 'Exiting with 0 status.')
+                f=open(json_file, 'w+')
+                f.write(json.dumps(self.stats_dictionary))
+                f.close()
+                sys.exit(0)
+            except KeyboardInterrupt:
+                self.run(subreddit, json_file)
 
         except UnicodeEncodeError as e:
             print self._generate_log_string('WARNING', 'Unicode encode error: {0}'.format(str(e)))
